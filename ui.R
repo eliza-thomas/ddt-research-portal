@@ -1,19 +1,26 @@
 library(leaflet)
 library(shinyWidgets)
 
-# TODO build programatically from unique(~institution/parameter) list 
+# TODO build programatically from unique(~institution/parameter) list (maybe)
 # Choices for drop-downs
 meas_vars <- c(
   "Benthic invertebrates" = "benthic invertebrates",
-  "Chlorophyll" = "chlorophyll",
   "DDT" = "ddt",
+  "DDX" = "ddx",
   "Deep biota" = "deep biota",
-  "Grain size" = "grain size",
-  "Organic matter" = "organic matter",
+  "Fish: Recreational" = "recreational fish",
+  "Fish: Mesopelagic" = "mesopelagic fish",
+  "Genetic potential" = "genetic potential",
+  "Microbe: Diversity & composition" = "microbial diversity and composition",
+  "Microbe: Taxonomy" = "microbial taxonomy", 
   "PAH" = "pah",
+  "Particles" = "particles",
   "PCB" = "pcb",
-  "Pigments" = "pigments",
-  "Sediment" = "sediment"
+  "Sediment" = "sediment",
+  "Sediment: Chlorophyll" = "sediment: chlorophyll",
+  "Sediment: Grain size" = "sediment: grain size",
+  "Sediment: Organic matter" = "sediment: organic matter",
+  "Sediment: Pigments" = "sediment: pigments"
 )
 
 inst_vars <- c(
@@ -40,12 +47,11 @@ navbarPage("Southern California DDT+ Research Portal", id="nav",
                         
                         # Shiny versions prior to 0.11 should use class = "modal" instead.
                         absolutePanel(id = "controls", class = "panel panel-default", fixed = TRUE,
-                                      draggable = TRUE, top = 60, left = "auto", right = 20, bottom = "auto",
+                                      draggable = TRUE, top = 60, left = 20, right = "auto", bottom = "auto",
                                       width = 330, height = "auto",
                                       
-                                      h2("Filter data:"),
-                                      #checkboxGroupInput("parameters", "Measurements", meas_vars),
-                                      
+                                      h2("Data filters:"),
+
                                       pickerInput(
                                         inputId = "parameters",
                                         label = "Measurements",
@@ -72,7 +78,9 @@ navbarPage("Southern California DDT+ Research Portal", id="nav",
                                           `none-selected-text` = "None selected"
                                         )
                                       ),
-                                      checkboxInput("cluster", "Toggle clustering", value = FALSE)
+                                      checkboxInput("cluster", "Toggle clustering", value = FALSE),
+                                      materialSwitch(inputId = "showDumpsite", label = "Show Known Dumpsites", status = "danger", value = TRUE),
+                                      p(id = "attribution", em("(Source: USC Sea Grant; approximated from 1973 SCCWRP Report')"))
                                       
                         ),
                         

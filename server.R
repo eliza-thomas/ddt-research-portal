@@ -9,30 +9,13 @@ library(tidyverse)
 library(janitor)
 library(sf)
 library(uuid)
-
 source('global.R')
+source('preprocessing_geo.R')
 
 function(input, output, session) {
   
-  set.seed(42)
-  wgs84 <- st_crs(4326)
-  # TESTING SAMPLING INFO DISPLAY
-  sampling = read_csv(here("data", "DDT_Sampling_Efforts.csv")) %>% clean_names() %>% slice_tail(n = 5) %>% rowwise() %>% mutate(id = uuid::UUIDgenerate())
-  coord_list = list()
-  for (i in c(1:nrow(sampling))) {
-    # get list of points for row
-    
-    coords = sampling[i,]$sampling_area_points_geometry
-    id = sampling[i,]$id
-    # parse coordinates into point df
-    coords = coords %>% str_split(pattern = "(?<=\\))(,\\s*)(?=\\()")
-    coords = coords[[1]] %>% str_replace_all("[//(//)]", "") %>% str_split(", ", simplify = T)
-    coords = as.data.frame(coords) %>% st_as_sf(coords = c("V2","V1"), crs = wgs84)
-    centroid = coords %>% st_combine() %>% st_centroid()
-    coord_list[[id]] = list(centroid = centroid, geo = coords)
-  }
-  
-  sampling = sampling %>% rowwise() %>% mutate(geometry = coord_list[[id]]$centroid) %>% st_as_sf
+  # Need to cut out last row for now... type issues reading kml
+  sampling = sampling %>% head(9) %>% rowwise() %>% mutate(geometry = coord_list[[id]]$centroid) %>% st_as_sf()
   sampling_filtered = sampling
   
   ## Interactive Map ###########################################
@@ -42,19 +25,28 @@ function(input, output, session) {
     leaflet() %>%
       addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>%
       addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>% 
-      setView(lng = -118.42, lat = 33.59, zoom = 10) %>%
-      addCircleMarkers(
-        group = "sample_objects",
-        data = sampling,
-        layerId = ~id,
-        color = "#000",
-        fillColor = "#FFF",
-        opacity = 0.5,
-        weight = 1,
-        radius = 20,
-        label = ~project_module,
-        labelOptions = list(direction = "auto")
-      ) #, clusterOptions = markerClusterOptions(showCoverageOnHover = FALSE, freezeAtZoom = 10)
+      setView(lng = -118.42, lat = 33.59, zoom = 10)
+  })
+  
+  # Toggle dumpsite polygons
+  observeEvent(input$showDumpsite, {
+    leafletProxy("map") %>% clearPopups()
+    event <- input$showDumpsite
+    
+    if (is.null(event) || !event) {
+      leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "dumpsites")
+      return()
+    }
+    
+    leafletProxy("map") %>% clearPopups() %>% 
+      addPolygons(
+        data = dumpsites,
+        group = "dumpsites",
+        fill = FALSE,
+        color = "#FF0000",
+        weight = 4,
+        label = ~site_label
+      )
   })
   
   # Toggle cluster
@@ -64,7 +56,7 @@ function(input, output, session) {
 
     if (is.null(event) || !event) {
       leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "sample_objects") %>% 
-        addCircleMarkers(
+        addPolygons(
           group = "sample_objects",
           data = sampling_filtered,
           layerId = ~id,

@@ -5,7 +5,7 @@ account: brenniedev
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8750990
-bundleId: 7043916
+bundleId: 7059042
 url: https://brenniedev.shinyapps.io/ddt-sampling-asset-shiny/
-when: 1680544388.61219
-lastSyncTime: 1680544388.6122
+when: 1680814447.50781
+lastSyncTime: 1680814447.50783
