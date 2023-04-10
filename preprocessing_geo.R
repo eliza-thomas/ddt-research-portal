@@ -33,6 +33,10 @@ for (i in c(1:nrow(sampling))) {
       coords = coords %>% str_split(pattern = "(?<=\\))(,\\s*)(?=\\()")
       coords = coords[[1]] %>% str_replace_all("[//(//)]", "") %>% str_split(", ", simplify = T)
       coords = as.data.frame(coords) %>% st_as_sf(coords = c("V2","V1"), crs = wgs84)
+      
+      # Add label/detail to points
+      #coords = coords %>% mutate()
+      
       centroid = coords %>% st_combine() %>% st_centroid()
       hull = coords %>% st_combine() %>% st_convex_hull()
       coord_list[[id]] = list(centroid = centroid, geo = coords, chull = hull)

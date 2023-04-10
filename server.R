@@ -15,8 +15,13 @@ source('preprocessing_geo.R')
 function(input, output, session) {
   
   # Need to cut out last row for now... type issues reading kml
-  sampling = sampling %>% head(9) %>% rowwise() %>% mutate(geometry = coord_list[[id]]$centroid) %>% st_as_sf()
-  sampling_filtered = sampling
+  sampling = sampling %>% rowwise() %>% mutate(geometry = coord_list[[id]]$centroid) %>% st_as_sf()
+  sampling_filtered = reactiveValues(vals = sampling)
+  
+  sample_labels <- sprintf(
+    "<div id = 'sample-label'><strong>%s</strong><br/>(Click to expand detailed view)</div>",
+    sampling$project_module) %>%
+    lapply(htmltools::HTML)
   
   ## Interactive Map ###########################################
   
@@ -25,7 +30,7 @@ function(input, output, session) {
     leaflet() %>%
       addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>%
       addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>% 
-      setView(lng = -118.42, lat = 33.59, zoom = 10)
+      setView(lng = -118.42, lat = 33.59, zoom = 9)
   })
   
   # Toggle dumpsite polygons
@@ -49,6 +54,13 @@ function(input, output, session) {
       )
   })
   
+  # Build icon for samples
+  mag_glass = makeIcon(
+    iconUrl = "https://cdn-icons-png.flaticon.com/512/49/49116.png",
+    iconWidth = 25,
+    iconHeight = 25
+  )
+  
   # Toggle cluster
   observeEvent(input$cluster, {
     leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "detailed")
@@ -56,36 +68,34 @@ function(input, output, session) {
 
     if (is.null(event) || !event) {
       leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "sample_objects") %>% 
-        addPolygons(
+        addMarkers(
           group = "sample_objects",
-          data = sampling_filtered,
+          data = sampling_filtered$vals,
           layerId = ~id,
-          color = "#000",
-          fillColor = "#FFF",
-          opacity = 0.5,
-          weight = 1,
-          radius = 20,
-          label = ~project_module,
-          labelOptions = list(direction = "auto")
+          icon = mag_glass,
+          label = ~sample_labels,
+          labelOptions = list(direction = "top")
         )
       return()
     }
     
     
     leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "sample_objects") %>% 
-      addCircleMarkers(
+      addMarkers(
         group = "sample_objects",
-        data = sampling_filtered,
+        data = sampling_filtered$vals,
         layerId = ~id,
-        color = "#000",
-        fillColor = "#FFF",
-        opacity = 0.5,
-        weight = 1,
-        radius = 20,
-        label = ~project_module,
-        labelOptions = list(direction = "auto"),
+        icon = mag_glass,
+        label = ~sample_labels,
+        labelOptions = list(direction = "top"),
         clusterOptions = markerClusterOptions(showCoverageOnHover = FALSE, freezeAtZoom = 10)
       )
+  })
+  
+  # Clear detailed markers on map click
+  observeEvent(input$map_click, {
+    click <- input$map_click
+    leafletProxy("map") %>% clearGroup("detailed")
   })
   
   
@@ -98,39 +108,34 @@ function(input, output, session) {
     }
     
     event <- input$parameters
-    sampling_filtered = sampling
+    sampling_filtered$vals = sampling
     if (is.null(event)){
-      sampling_filtered = sampling_filtered
+      sampling_filtered$vals = sampling_filtered$vals
     } else {
-      sampling_filtered = sampling %>%
-        filter(any(str_split(tolower(parameters_measured), "\\, |\\,|\\; ")[[1]] %in% event))
+      sampling_filtered$vals = sampling %>%
+        filter(any(str_split(tolower(parameters_measured), "\\, |\\,|\\; ,| \\(")[[1]] %in% event))
     }
     
     event <- input$institutions
     if (is.null(event)){
-      sampling_filtered = sampling_filtered
+      sampling_filtered$vals = sampling_filtered$vals
     } else {
-      sampling_filtered = sampling_filtered %>%
+      sampling_filtered$vals = sampling_filtered$vals %>%
         filter(any(str_split(tolower(institution), "\\, |\\,|\\; ")[[1]] %in% event))
     }
     
-    
     leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "sample_objects") %>% 
-      addCircleMarkers(
+      addMarkers(
         group = "sample_objects",
-        data = sampling_filtered,
+        data = sampling_filtered$vals,
         layerId = ~id,
-        color = "#000",
-        fillColor = "#FFF",
-        opacity = 0.5,
-        weight = 1,
-        radius = 20,
-        label = ~project_module,
-        labelOptions = list(direction = "auto")
+        icon = mag_glass,
+        label = ~sample_labels,
+        labelOptions = list(direction = "top"),
       )
   })
   
-  # This observer is responsible for onMouseover popups
+  # This observer is responsible for onMouseclick popups
   observe({
     leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "detailed")
     event <- input$map_marker_click
@@ -144,10 +149,23 @@ function(input, output, session) {
     sample <- coord_list[[event$id]]
     sample_bounds = as.vector(sample$geo %>% st_combine() %>% st_bbox())
     
-    leafletProxy("map") %>%
-      addMarkers(data = sample$geo, group = "detailed") %>%
+    leafletProxy("map") %>% # clearGroup(group = "sample_objects") %>% clear primary markers? how to get back after?
+      addMarkers(data = sample$geo, group = "detailed")
       #TODO fix warning Input to asJSON(keep_vec_names=TRUE) is a named vector.
-      flyToBounds(lng2 = sample_bounds[1], lat2 = sample_bounds[2], lng1 = sample_bounds[3], lat1 = sample_bounds[4], options = c(animate = TRUE))
+      
+    
+    if (st_geometry_type(sample$chull) == "POLYGON") {
+      leafletProxy("map") %>%
+        addPolygons(
+          data = sample$chull,
+          group = "detailed",
+          color = "#000",
+          fillColor = "#FFF",
+          opacity = 0.5,
+          weight = 1
+        ) %>% 
+        flyToBounds(lng2 = sample_bounds[1], lat2 = sample_bounds[2], lng1 = sample_bounds[3], lat1 = sample_bounds[4], options = c(animate = TRUE))
+    }
   })
   
   showSampleData <- function(marker_id, lat, lng) {
@@ -170,7 +188,7 @@ function(input, output, session) {
       sprintf("Analysis Status: %s", selectedSample$status_analysis)
     ))
     
-    leafletProxy("map") %>% addPopups(lng, lat, content, layerId = id, options = popupOptions(closeOnClick = TRUE))
+    leafletProxy("map") %>% addPopups(lng, lat, content, layerId = id, options = popupOptions(closeOnClick = TRUE, keepInView = TRUE))
   }
   
   
