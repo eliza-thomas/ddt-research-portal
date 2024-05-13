@@ -55,8 +55,5 @@ navbarPage(app_title, id="nav",
                                  attribution_string
                         )
                     )
-           ),
-           tabPanel("Learn more",
-                    htmlOutput("frame")
-           ),
+           )
 )

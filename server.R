@@ -14,9 +14,8 @@ function(input, output, session) {
   row_entities = datasets
   filtered_rows = reactiveValues(vals = row_entities)
   
-  context_geometry = read_sf(dsn = here("data/context_geometry")) 
-    
-    
+  context_geometry = read_sf(here("data", "context_geometry")) %>% st_transform(provided_crs)
+
     ## Interactive Map ##
     # Create a Leaflet map
     output$map <- renderLeaflet({
@@ -28,16 +27,16 @@ function(input, output, session) {
         setView(lng = initial_long, lat = initial_lat, zoom = 5)
       
       # Render a static feature if provided
-      if (!is_null(feature_geometry)) {     #todo read context_geom from folder location?
+      if (!is_null(context_geometry)) {
         
-        leafletProxy("map") %>%
-          addPolygons(
-            data = feature_geometry, 
-            group = "contextual",
-            fill = FALSE,
-            color = "yellow",
-            weight = 4
-          )
+        # leafletProxy("map") %>%
+        #   addPolygons(
+        #     data = context_geometry$geometry,
+        #     group = "contextual",
+        #     fill = FALSE,
+        #     color = "yellow",
+        #     weight = 4
+        #   )
       }
     })
   
@@ -54,7 +53,7 @@ function(input, output, session) {
       filtered_rows$vals = filtered_rows$vals
     } else {
       filtered_rows$vals = row_entities %>%
-        filter(variable_types %in% event)
+        filter(variable %in% event)
     }
     
     # Observe a change to selected input variables
@@ -66,14 +65,14 @@ function(input, output, session) {
         filter(organization %in% event)
     }
     
-    leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "datasets_filtered") %>% 
-      addPolygons(
-        data = context_geom, 
-        group = "contextual",
-        fill = FALSE,
-        color = "#FF0000",
-        weight = 4
-      )
+    # leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "datasets_filtered") %>% 
+    #   addPolygons(
+    #     data = context_geom, 
+    #     group = "contextual",
+    #     fill = FALSE,
+    #     color = "#FF0000",
+    #     weight = 4
+    #   )
   })
   
   
@@ -84,7 +83,7 @@ function(input, output, session) {
     text = app_description,
     type = "",
     size = "m",
-    imageUrl = "https://sccoos.org/wp-content/uploads/2022/05/SCCOOS_logo-01.png",
+    imageUrl = "https://s2020.s3.amazonaws.com/media/logo-scripps-ucsd-dark.png",
     imageWidth = 500,
     imageHeight = 60
   )
