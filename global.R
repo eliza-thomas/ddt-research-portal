@@ -11,8 +11,8 @@ provided_crs <- st_crs(4326)
 #context_geometry_filename = "LeaseAreas_poly.kmz"
 
 # Center coordinate of map
-initial_long = -118.42
-initial_lat = 33.59
+initial_long = -120.78
+initial_lat = 35.56
 
 # Read in project data
 datasets <- read_csv(here("data", "dataset_rows.csv"))

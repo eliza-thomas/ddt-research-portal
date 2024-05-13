@@ -14,7 +14,8 @@ function(input, output, session) {
   row_entities = datasets
   filtered_rows = reactiveValues(vals = row_entities)
   
-  context_geometry = read_sf(here("data", "context_geometry")) %>% st_transform(provided_crs)
+  context_geometry = read_sf(here("data", "context_geometry")) %>% st_transform(st_crs(4326)) %>% st_zm()
+  context_geometry = st_sfc(context_geometry$geometry) 
 
     ## Interactive Map ##
     # Create a Leaflet map
@@ -24,7 +25,16 @@ function(input, output, session) {
         addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 3, maxZoom = 16)) %>%
         addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 3, maxZoom = 16)) %>%  
         # Set initial map position/zoom
-        setView(lng = initial_long, lat = initial_lat, zoom = 8)
+        setView(lng = initial_long, lat = initial_lat, zoom = 8) %>% 
+        addPolygons(
+          data = context_geometry,
+          fillOpacity  = 1,
+          stroke = TRUE,
+          color = "#000",
+          fillColor = "#fff3b0",
+          opacity = 1,
+          weight = 2
+        )
     })
   
   # Filter map data reactively
