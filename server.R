@@ -1,14 +1,11 @@
 library(leaflet)
-library(RColorBrewer)
-library(scales)
-library(lattice)
-library(dplyr)
+library(tidyverse)
 library(shinyalert)
-library(here)
 library(tidyverse)
 library(janitor)
 library(sf)
-library(uuid)
+library(tidyverse)
+library(here)
 source('global.R')
 
 function(input, output, session) {
@@ -17,8 +14,7 @@ function(input, output, session) {
   row_entities = datasets
   filtered_rows = reactiveValues(vals = row_entities)
   
-  row_geometries = ""
-  feature_geometry = 
+  context_geometry = read_sf(dsn = here("data/context_geometry")) 
     
     
     ## Interactive Map ##
@@ -29,7 +25,7 @@ function(input, output, session) {
         addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>%
         addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>% 
         # Set initial map position/zoom
-        setView(lng = initial_lon, lat = initial_lat, zoom = 5)
+        setView(lng = initial_long, lat = initial_lat, zoom = 5)
       
       # Render a static feature if provided
       if (!is_null(feature_geometry)) {     #todo read context_geom from folder location?
