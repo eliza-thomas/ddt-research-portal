@@ -1,10 +1,10 @@
 library(leaflet)
 library(shinyWidgets)
 
-navbarPage("Southern California DDT+ Research Portal", id="nav",
+navbarPage(app_title, id="nav",
            tabPanel("Interactive map",
                     div(class="outer",
-                        
+  
                         tags$head(
                           # Include our custom CSS
                           includeCSS("styles.css"),
@@ -22,10 +22,10 @@ navbarPage("Southern California DDT+ Research Portal", id="nav",
                                       h2("Data filters:"),
 
                                       pickerInput(
-                                        inputId = "parameters",
+                                        inputId = "variable_types",
                                         label = "Measurements",
-                                        choices = meas_vars,
-                                        selected = meas_vars,
+                                        choices = variable_types,
+                                        selected = variable_types,
                                         multiple = TRUE,
                                         options = list(
                                           `actions-box` = TRUE,
@@ -35,10 +35,10 @@ navbarPage("Southern California DDT+ Research Portal", id="nav",
                                         )
                                       ),
                                       pickerInput(
-                                        inputId = "institutions",
-                                        label = "Institutions",
-                                        choices = inst_vars,
-                                        selected = inst_vars,
+                                        inputId = "organizations",
+                                        label = "Organizations",
+                                        choices = organizations,
+                                        selected = organizations,
                                         multiple = TRUE,
                                         options = list(
                                           `actions-box` = TRUE,
@@ -47,20 +47,14 @@ navbarPage("Southern California DDT+ Research Portal", id="nav",
                                           `none-selected-text` = "None selected"
                                         )
                                       ),
-                                      checkboxInput("cluster", "Toggle clustering", value = FALSE),
-                                      materialSwitch(inputId = "showDumpsite", label = "Show Known Dumpsites", status = "danger", value = TRUE),
-                                      p(id = "attribution", em("(Source: USC Sea Grant; approximated from 1973 SCCWRP Report')"))
-                                      
+                                      #checkboxInput("cluster", "Toggle clustering", value = FALSE)
                         ),
-                        
                         tags$div(id="cite",
-                                 'Sources: Esri, GEBCO, NOAA, National Geographic, DeLorme, HERE, Geonames.org, and other contributors'
+                                 attribute_string
                         )
                     )
            ),
-           
            tabPanel("Learn more",
                     htmlOutput("frame")
-                    #DT::dataTableOutput("ziptable")
            ),
 )
