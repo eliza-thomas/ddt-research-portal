@@ -21,31 +21,19 @@ function(input, output, session) {
     output$map <- renderLeaflet({
       leaflet() %>%
         # Adding World_Ocean base maps
-        addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>%
-        addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>% 
+        addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 3, maxZoom = 16)) %>%
+        addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 3, maxZoom = 16)) %>%  
         # Set initial map position/zoom
-        setView(lng = initial_long, lat = initial_lat, zoom = 5)
-      
-      # Render a static feature if provided
-      if (!is_null(context_geometry)) {
-        
-        # leafletProxy("map") %>%
-        #   addPolygons(
-        #     data = context_geometry$geometry,
-        #     group = "contextual",
-        #     fill = FALSE,
-        #     color = "yellow",
-        #     weight = 4
-        #   )
-      }
+        setView(lng = initial_long, lat = initial_lat, zoom = 8)
     })
   
   # Filter map data reactively
   observe({
     if (is.null(input$variable_types) && is.null(input$organization)) {
+      leafletProxy("map")
       return()
     }
-    
+    leafletProxy("map")
     # Observe a change to selected input variables
     event <- input$variable_types
     filtered_rows$vals = row_entities
