@@ -1,5 +1,6 @@
 library(leaflet)
 library(shinyWidgets)
+source('global.R')
 
 navbarPage(app_title, id="nav",
            tabPanel("Interactive map",
@@ -24,8 +25,8 @@ navbarPage(app_title, id="nav",
                                       pickerInput(
                                         inputId = "variable_types",
                                         label = "Measurements",
-                                        choices = variable_types,
-                                        selected = variable_types,
+                                        choices = variable_list,
+                                        selected = variable_list,
                                         multiple = TRUE,
                                         options = list(
                                           `actions-box` = TRUE,
@@ -37,8 +38,8 @@ navbarPage(app_title, id="nav",
                                       pickerInput(
                                         inputId = "organizations",
                                         label = "Organizations",
-                                        choices = organizations,
-                                        selected = organizations,
+                                        choices = organization_list,
+                                        selected = organization_list,
                                         multiple = TRUE,
                                         options = list(
                                           `actions-box` = TRUE,
@@ -50,7 +51,7 @@ navbarPage(app_title, id="nav",
                                       #checkboxInput("cluster", "Toggle clustering", value = FALSE)
                         ),
                         tags$div(id="cite",
-                                 attribute_string
+                                 attribution_string
                         )
                     )
            ),
