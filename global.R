@@ -3,7 +3,7 @@ library(dplyr)
 # Portal metadata
 app_title = "Ocean Impact Monitoring of Floating Offshore Wind Developments in California"
 app_description = "This app offers an interactive way to visualize the breadth of long-term ocean monitoring that is relavent to measuring the impacts of floating offshore wind developments in California."
-attribution_string = ""
+attribution_string = "Esri, spatial data sources available upon request"
 provided_crs = ""
 
 # Center coordinate of map
