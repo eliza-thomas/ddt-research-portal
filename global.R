@@ -1,10 +1,12 @@
 library(dplyr)
+library(here)
 
 # Portal metadata
 app_title = "Ocean Impact Monitoring of Floating Offshore Wind Developments in California"
 app_description = "This app offers an interactive way to visualize the breadth of long-term ocean monitoring that is relavent to measuring the impacts of floating offshore wind developments in California."
-attribution_string = "Esri, spatial data sources available upon request"
+attribution_string = "Sources: Esri, spatial data sources available upon request"
 provided_crs = ""
+context_geometry_filename = "LeaseAreas_poly.kmz"
 
 # Center coordinate of map
 initial_long = -118.42

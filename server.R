@@ -17,29 +17,33 @@ function(input, output, session) {
   row_entities = datasets
   filtered_rows = reactiveValues(vals = row_entities)
   
-  ## Interactive Map ##
-  # Create a Leaflet map
-  output$map <- renderLeaflet({
-    leaflet() %>%
-      # Adding World_Ocean base maps
-      addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>%
-      addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>% 
-      # Set initial map position/zoom
-      setView(lng = initial_lon, lat = initial_lat, zoom = 5)
+  row_geometries = ""
+  feature_geometry = 
     
-    # Render a static feature if provided
-    if (!is_null(context_geom)) {     #todo read context_geom from folder location?
-
-      leafletProxy("map") %>%
-        addPolygons(
-          data = context_geom, 
-          group = "contextual",
-          fill = FALSE,
-          color = "#FF0000",
-          weight = 4
-        )
-    }
-  })
+    
+    ## Interactive Map ##
+    # Create a Leaflet map
+    output$map <- renderLeaflet({
+      leaflet() %>%
+        # Adding World_Ocean base maps
+        addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>%
+        addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 6, maxZoom = 16)) %>% 
+        # Set initial map position/zoom
+        setView(lng = initial_lon, lat = initial_lat, zoom = 5)
+      
+      # Render a static feature if provided
+      if (!is_null(feature_geometry)) {     #todo read context_geom from folder location?
+        
+        leafletProxy("map") %>%
+          addPolygons(
+            data = feature_geometry, 
+            group = "contextual",
+            fill = FALSE,
+            color = "yellow",
+            weight = 4
+          )
+      }
+    })
   
   # Filter map data reactively
   observe({

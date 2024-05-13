@@ -1,5 +1,6 @@
 library(leaflet)
 library(shinyWidgets)
+library(tidyverse)
 source('global.R')
 
 navbarPage(app_title, id="nav",
