@@ -54,7 +54,8 @@ function(input, output, session) {
         color = "#fff",
         fillColor = "#d41",
         opacity = 1,
-        weight = 2
+        weight = 2,
+        
       )
   })
   
@@ -106,7 +107,8 @@ function(input, output, session) {
         color = "#fff",
         fillColor = "#d41",
         opacity = 1,
-        weight = 2
+        weight = 2,
+        popup = paste("Organization: ", organization_geometries_filtered$organization, "<hr/>Variables: ", organization_geometries_filtered$variable_types),
       )
   })
   
