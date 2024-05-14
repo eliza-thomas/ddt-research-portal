@@ -3,8 +3,8 @@ library(sf)
 library(here)
 
 # Portal metadata
-app_title = "Ocean Impact Monitoring of Floating Offshore Wind Developments in California"
-app_description = "This app offers an interactive way to visualize the breadth of long-term ocean monitoring that is relavent to measuring the impacts of floating offshore wind developments in California."
+app_title = "Monitoring the Ecological and Oceanographic Impacts of Floating Offshore Wind Developments in California"
+app_description = "An interactive visualization of long-term ocean monitoring programs that are key to measuring the impacts of floating offshore wind developments in California."
 attribution_string = "Sources: Esri, spatial data sources available upon request"
 provided_crs <- st_crs(4326)
 
