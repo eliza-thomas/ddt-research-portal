@@ -17,60 +17,97 @@ function(input, output, session) {
   context_geometry = read_sf(here("data", "context_geometry")) %>% st_transform(st_crs(4326)) %>% st_zm()
   context_geometry = st_sfc(context_geometry$geometry) 
 
-    ## Interactive Map ##
-    # Create a Leaflet map
-    output$map <- renderLeaflet({
-      leaflet() %>%
-        # Adding World_Ocean base maps
-        addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 3, maxZoom = 16)) %>%
-        addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 3, maxZoom = 16)) %>%  
-        # Set initial map position/zoom
-        setView(lng = initial_long, lat = initial_lat, zoom = 8) %>% 
-        addPolygons(
-          data = context_geometry,
-          fillOpacity  = 1,
-          stroke = TRUE,
-          color = "#000",
-          fillColor = "#fff3b0",
-          opacity = 1,
-          weight = 2
-        )
-    })
+  # Read each of the shapefiles in via their encompassing Organization folder
+  organization_geometry_map = list()
+  for (folder in list.dirs(here("data","dataset_geometry/"), full.names = FALSE, recursive = FALSE)) {
+    geometry = read_sf(here("data", "dataset_geometry", folder)) %>% st_transform(st_crs(4326)) %>% st_zm()
+    organization_geometry_map[[folder]] = geometry
+  }
+  
+  organization_geometries = bind_rows(organization_geometry_map, .id = "organization") %>% select(organization,geometry)
+
+  ## Interactive Map ##
+  # Create a Leaflet map
+  output$map <- renderLeaflet({
+    leaflet() %>%
+      # Adding World_Ocean base maps
+      addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 3, maxZoom = 16)) %>%
+      addTiles(urlTemplate = "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}", options = tileOptions(minZoom = 3, maxZoom = 16)) %>%  
+      # Set initial map position/zoom
+      setView(lng = initial_long, lat = initial_lat, zoom = 8) %>% 
+      # Add/style contextual shapefile
+      addPolygons(
+        data = context_geometry,
+        fillOpacity  = 1,
+        stroke = TRUE,
+        color = "#000",
+        fillColor = "#fff3b0",
+        opacity = 1,
+        weight = 2
+      ) %>%
+      # Add/style dataset shapefiles
+      addPolygons(
+        group = "datasets_filtered",
+        data = organization_geometries,
+        fillOpacity  = 0.1,
+        stroke = TRUE,
+        color = "#fff",
+        fillColor = "#d41",
+        opacity = 1,
+        weight = 2
+      )
+  })
   
   # Filter map data reactively
-  observe({
-    if (is.null(input$variable_types) && is.null(input$organization)) {
-      leafletProxy("map")
+  observeEvent(list(input$variable_types, input$organizations), {
+    if (is.null(input$variable_types) && is.null(input$organizations)) {
+      leafletProxy("map") %>% clearGroup(group = "datasets_filtered") %>% clearPopups()
       return()
     }
-    leafletProxy("map")
-    # Observe a change to selected input variables
+    
+    # Observe and store any change to selected variable types
     event <- input$variable_types
     filtered_rows$vals = row_entities
     if (is.null(event)){
-      filtered_rows$vals = filtered_rows$vals
+      filtered_rows$vals = filtered_rows$vals %>% filter(F)
     } else {
-      filtered_rows$vals = row_entities %>%
+      filtered_rows$vals = filtered_rows$vals %>%
         filter(variable %in% event)
     }
     
-    # Observe a change to selected input variables
-    event <- input$organization
+    variable_matches = unique(filtered_rows$vals)
+    
+    # Observe and store any change to selected organizations
+    event <- input$organizations
+    filtered_rows$vals = row_entities
     if (is.null(event)){
-      filtered_rows$vals = filtered_rows$vals
+      filtered_rows$vals = filtered_rows$vals %>% filter(F)
     } else {
-      filtered_rows$vals = row_entities$vals %>%
+      filtered_rows$vals = filtered_rows$vals %>%
         filter(organization %in% event)
     }
+    organization_matches = unique(filtered_rows$vals)
     
-    # leafletProxy("map") %>% clearPopups() %>% clearGroup(group = "datasets_filtered") %>% 
-    #   addPolygons(
-    #     data = context_geom, 
-    #     group = "contextual",
-    #     fill = FALSE,
-    #     color = "#FF0000",
-    #     weight = 4
-    #   )
+    # Subset the geometries provided to Leaflet to include matches to any filter value (OR logic)
+    organization_geometries_filtered = union(organization_matches, variable_matches) %>%
+      group_by(organization) %>% 
+      mutate(variable_types = paste0(variable, collapse = ", ")) %>%
+      distinct(organization, variable_types) %>%
+      inner_join(organization_geometries) %>%
+      st_as_sf(crs = provided_crs) %>%
+      filter(!st_is_empty(geometry))
+      
+    leafletProxy("map") %>% clearGroup(group = "datasets_filtered") %>% clearPopups() %>%
+      addPolygons(
+        group = "datasets_filtered",
+        data = organization_geometries_filtered,
+        fillOpacity  = 0.1,
+        stroke = TRUE,
+        color = "#fff",
+        fillColor = "#d41",
+        opacity = 1,
+        weight = 2
+      )
   })
   
   
