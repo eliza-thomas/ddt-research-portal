@@ -122,6 +122,7 @@ function(input, output, session) {
     size = "m",
     imageUrl = "https://s2020.s3.amazonaws.com/media/logo-scripps-ucsd-dark.png",
     imageWidth = 500,
-    imageHeight = 60
+    imageHeight = 60,
+    closeOnClickOutside = TRUE
   )
 }
