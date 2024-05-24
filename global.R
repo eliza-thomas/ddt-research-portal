@@ -1,6 +1,7 @@
 library(tidyverse)
 library(sf)
 library(here)
+library(leaflet)
 library(Polychrome)
 
 # Portal metadata

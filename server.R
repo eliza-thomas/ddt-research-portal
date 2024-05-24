@@ -33,7 +33,7 @@ function(input, output, session) {
     organization_points_map[[folder]] = geometry
   }
   
-  organization_points = bind_rows(organization_points_map, .id = "organization") %>% select(organization,geometry)
+  organization_points = bind_rows(organization_points_map, .id = "organization") %>% select(organization,geometry) %>% filter(!st_is_empty(geometry)) %>% as_Spatial()
   
   
   ## Interactive Map ##
@@ -69,7 +69,7 @@ function(input, output, session) {
       ) %>%
       #add circle markers
       addCircleMarkers(
-        data = organization_points$geometry,  
+        data = organization_points,  
           radius = 10,
           layerId = NULL,
           group = "datasets_filtered",
@@ -126,10 +126,9 @@ function(input, output, session) {
     organization_points_filtered = union(organization_matches, variable_matches) %>%
       group_by(organization) %>% 
       mutate(variable_types = paste0(variable, collapse = ", ")) %>%
-      distinct(organization, variable_types) %>%
-      inner_join(organization_points) %>%
-      st_as_sf(crs = provided_crs) %>%
-      filter(!st_is_empty(geometry))
+      distinct(organization, variable_types)
+    
+    organization_points_filtered = st_as_sf(organization_points) %>% filter(organization %in% organization_points_filtered$organization)
       
     leafletProxy("map") %>% clearGroup(group = "datasets_filtered") %>% clearPopups() %>%
       addPolygons(
@@ -143,19 +142,20 @@ function(input, output, session) {
         weight = 2,
         popup = paste("Organization: ", organization_polygons_filtered$organization, "<hr/>Variables: ", organization_polygons_filtered$variable_types),
       ) %>%
-    addCircleMarkers(
-      data = organizations_points_filtered,  
-      radius = 10,
-      layerId = NULL,
-      group = "datasets_filtered",
-      stroke = TRUE,
-      color = "#03F",
-      weight = 5,
-      opacity = 0.5,
-      fill = TRUE,
-      fillColor = color,
-      fillOpacity = 0.2
-    )
+      addCircleMarkers(
+        data = organization_points_filtered,  
+        radius = 10,
+        layerId = NULL,
+        group = "datasets_filtered",
+        stroke = TRUE,
+        color = ~pal(organization),
+        weight = 5,
+        opacity = 0.5,
+        fill = TRUE,
+        fillColor = ~pal(organization),
+        fillOpacity = 0.2,
+        clusterOptions = markerClusterOptions()
+      )
   })
   
   
