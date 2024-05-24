@@ -58,11 +58,11 @@ RREAS,Temperature
 RREAS,Salinity
 SCB MBON,Benthic habitat
 SCB MBON,Fish
-SSCCWRP,Benthic habitat
-SSCCWRP,Fish
-SSCCWRP,Salinity
+SCCWRP,Benthic habitat
+SCCWRP,Fish
+SCCWRP,Salinity
 MBARI Coastal Buoys,Primary production
 MBARI Coastal Buoys,Temperature
 MBARI Coastal Buoys,Salinity
-SCCOOS HFR,Surface currents
+SCCOOS HFRs,Surface currents
 PNNLL,Surface currents

@@ -130,7 +130,7 @@ function(input, output, session) {
     
     organization_points_filtered = st_as_sf(organization_points) %>% filter(organization %in% organization_points_filtered$organization)
       
-    leafletProxy("map") %>% clearGroup(group = "datasets_filtered") %>% clearPopups() %>%
+    leafletProxy("map") %>% clearGroup(group = "datasets_filtered") %>% clearPopups() %>% clearControls() %>% 
       addPolygons(
         group = "datasets_filtered",
         data = organization_polygons_filtered,
@@ -153,9 +153,8 @@ function(input, output, session) {
         opacity = 0.5,
         fill = TRUE,
         fillColor = ~pal(organization),
-        fillOpacity = 0.2,
-        clusterOptions = markerClusterOptions()
-      )
+        fillOpacity = 0.2
+      ) %>% addLegend(pal = pal, position ="bottomleft", values = organization_points_filtered$organization, group = "datasets_filtered")
   })
   
   
