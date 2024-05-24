@@ -154,6 +154,7 @@ function(input, output, session) {
         fill = TRUE,
         fillColor = ~pal(organization),
         fillOpacity = 0.2
+        #,clusterOptions = markerClusterOptions()      <-uncomment to enable point clustering
       ) %>% addLegend(pal = pal, position ="bottomleft", values = organization_points_filtered$organization, group = "datasets_filtered")
   })
   
