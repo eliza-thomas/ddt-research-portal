@@ -25,8 +25,6 @@ CCES,Fish
 CCES,Surface currents
 CCES,Temperature
 CCES,Salinity
-MOCI,Wind
-MOCI,Temperature
 GBTS,Benthic habitat
 GBTS,Fish
 GBTS,Primary production
@@ -63,9 +61,6 @@ SCB MBON,Fish
 SSCCWRP,Benthic habitat
 SSCCWRP,Fish
 SSCCWRP,Salinity
-THL,Primary production
-THL,Temperature
-THL,Salinity
 MBARI Coastal Buoys,Primary production
 MBARI Coastal Buoys,Temperature
 MBARI Coastal Buoys,Salinity

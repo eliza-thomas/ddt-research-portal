@@ -17,15 +17,25 @@ function(input, output, session) {
   context_geometry = read_sf(here("data", "context_geometry")) %>% st_transform(st_crs(4326)) %>% st_zm()
   context_geometry = st_sfc(context_geometry$geometry) 
 
-  # Read each of the shapefiles in via their encompassing Organization folder
-  organization_geometry_map = list()
+  # Read each of the shapefiles in via their encompassing Organization folder - POLYGONS
+  organization_polygon_map = list()
   for (folder in list.dirs(here("data","dataset_geometry/"), full.names = FALSE, recursive = FALSE)) {
     geometry = read_sf(here("data", "dataset_geometry", folder)) %>% st_transform(st_crs(4326)) %>% st_zm()
-    organization_geometry_map[[folder]] = geometry
+    organization_polygon_map[[folder]] = geometry
   }
   
-  organization_geometries = bind_rows(organization_geometry_map, .id = "organization") %>% select(organization,geometry)
-
+  organization_polygons = bind_rows(organization_polygon_map, .id = "organization") %>% select(organization,geometry)
+  
+  # Read each of the shapefiles in via their encompassing Organization folder - POINTS
+  organization_points_map = list()
+  for (folder in list.dirs(here("data","dataset_points/"), full.names = FALSE, recursive = FALSE)) {
+    geometry = read_sf(here("data", "dataset_points", folder)) %>% st_transform(st_crs(4326)) %>% st_zm()
+    organization_points_map[[folder]] = geometry
+  }
+  
+  organization_points = bind_rows(organization_points_map, .id = "organization") %>% select(organization,geometry)
+  
+  
   ## Interactive Map ##
   # Create a Leaflet map
   output$map <- renderLeaflet({
@@ -48,7 +58,7 @@ function(input, output, session) {
       # Add/style dataset shapefiles
       addPolygons(
         group = "datasets_filtered",
-        data = organization_geometries,
+        data = organization_polygons,
         fillOpacity  = 0.1,
         stroke = TRUE,
         color = "#fff",
@@ -56,7 +66,21 @@ function(input, output, session) {
         opacity = 1,
         weight = 2,
         
-      )
+      ) %>%
+      #add circle markers
+      addCircleMarkers(
+        data = organization_points$geometry,  
+          radius = 10,
+          layerId = NULL,
+          group = "datasets_filtered",
+          stroke = TRUE,
+          color = ~pal(organization),
+          weight = 5,
+          opacity = 0.5,
+          fill = TRUE,
+          fillColor = ~pal(organization),
+          fillOpacity = 0.2
+        )
   })
   
   # Filter map data reactively
@@ -89,27 +113,49 @@ function(input, output, session) {
     }
     organization_matches = unique(filtered_rows$vals)
     
-    # Subset the geometries provided to Leaflet to include matches to any filter value (OR logic)
-    organization_geometries_filtered = union(organization_matches, variable_matches) %>%
+    # Subset the geometries POLYGONS provided to Leaflet to include matches to any filter value (OR logic)
+    organization_polygons_filtered = union(organization_matches, variable_matches) %>%
       group_by(organization) %>% 
       mutate(variable_types = paste0(variable, collapse = ", ")) %>%
       distinct(organization, variable_types) %>%
-      inner_join(organization_geometries) %>%
+      inner_join(organization_polygons) %>%
+      st_as_sf(crs = provided_crs) %>%
+      filter(!st_is_empty(geometry))
+    
+    # Subset the geometries POINTS provided to Leaflet to include matches to any filter value (OR logic)
+    organization_points_filtered = union(organization_matches, variable_matches) %>%
+      group_by(organization) %>% 
+      mutate(variable_types = paste0(variable, collapse = ", ")) %>%
+      distinct(organization, variable_types) %>%
+      inner_join(organization_points) %>%
       st_as_sf(crs = provided_crs) %>%
       filter(!st_is_empty(geometry))
       
     leafletProxy("map") %>% clearGroup(group = "datasets_filtered") %>% clearPopups() %>%
       addPolygons(
         group = "datasets_filtered",
-        data = organization_geometries_filtered,
+        data = organization_polygons_filtered,
         fillOpacity  = 0.1,
         stroke = TRUE,
         color = "#fff",
         fillColor = "#d41",
         opacity = 1,
         weight = 2,
-        popup = paste("Organization: ", organization_geometries_filtered$organization, "<hr/>Variables: ", organization_geometries_filtered$variable_types),
-      )
+        popup = paste("Organization: ", organization_polygons_filtered$organization, "<hr/>Variables: ", organization_polygons_filtered$variable_types),
+      ) %>%
+    addCircleMarkers(
+      data = organizations_points_filtered,  
+      radius = 10,
+      layerId = NULL,
+      group = "datasets_filtered",
+      stroke = TRUE,
+      color = "#03F",
+      weight = 5,
+      opacity = 0.5,
+      fill = TRUE,
+      fillColor = color,
+      fillOpacity = 0.2
+    )
   })
   
   

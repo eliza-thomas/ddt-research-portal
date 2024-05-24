@@ -1,6 +1,7 @@
 library(tidyverse)
 library(sf)
 library(here)
+library(Polychrome)
 
 # Portal metadata
 app_title = "Monitoring the Ecological and Oceanographic Impacts of Floating Offshore Wind Developments in California"
@@ -23,3 +24,9 @@ variable_list <- variable_types$variable
 
 # What organizations are available to filter on?
 organization_list <- unique(datasets$organization)
+colors = glasbey.colors(length(organization_list))
+pal = colorFactor(colors, domain = organization_list)
+
+
+
+

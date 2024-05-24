@@ -25,9 +25,9 @@ navbarPage(app_title, id="nav",
 
                                       pickerInput(
                                         inputId = "variable_types",
-                                        label = "Measurements",
+                                        label = "Essential Ocean Variables",
                                         choices = variable_list,
-                                        selected = variable_list,
+                                        selected = list(),
                                         multiple = TRUE,
                                         options = list(
                                           `actions-box` = TRUE,
@@ -38,9 +38,9 @@ navbarPage(app_title, id="nav",
                                       ),
                                       pickerInput(
                                         inputId = "organizations",
-                                        label = "Organizations",
+                                        label = "Monitoring Programs",
                                         choices = organization_list,
-                                        selected = organization_list,
+                                        selected = list(),
                                         multiple = TRUE,
                                         options = list(
                                           `actions-box` = TRUE,
